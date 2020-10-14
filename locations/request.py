@@ -1,13 +1,59 @@
+import sqlite3
+import json
 from models.location import Location
 
 LOCATIONS = [
-    Location(1, "Nashville North", "8422 Johnson Pike"),
-    Location(2, 'Nashville South', "209 Emory Drive"),
-    Location(3, 'Nashville West', "100 Charlotte Pike")
+    Location(1, "Nashville East", "8422 Johnson Pike"),
+    Location(2, 'Nashville West', "209 Emory Drive"),
+    Location(3, 'Nashville Weast', "100 Charlotte Pike")
 ]
 
 def get_all_locations():
-    return LOCATIONS
+    with sqlite3.connect("./kennel.db") as conn:
+
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            a.id,
+            a.name,
+            a.address
+        FROM location a
+        """)
+
+        locations = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+
+            location = Location(row['id'], row['name'], row['address'])
+
+            locations.append(location.__dict__)
+
+    return json.dumps(locations)
+
+def get_single_location(id):
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            a.id,
+            a.name,
+            a.address
+        FROM location a
+        WHERE a.id = ?
+        """, ( id, ))
+
+        data = db_cursor.fetchone()
+
+        location = Location(data['name'], data['address'], data['id'])
+
+        return json.dumps(location.__dict__)
+
 
 def create_location(location):
     max_id = LOCATIONS[-1].id
@@ -20,17 +66,6 @@ def create_location(location):
     LOCATIONS.append(new_location)
 
     return location
-
-    
-def get_single_location(id):
-   
-    requested_location = None
-
-    for location in LOCATIONS:
-        if location.id == id:
-            requested_location = location
-
-    return requested_location
 
 def delete_location(id):
     location_index = -1
