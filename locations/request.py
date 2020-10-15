@@ -50,7 +50,7 @@ def get_single_location(id):
 
         data = db_cursor.fetchone()
 
-        location = Location(data['name'], data['address'], data['id'])
+        location = Location(data['id'], data['name'], data['address'])
 
         return json.dumps(location.__dict__)
 
