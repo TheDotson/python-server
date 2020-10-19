@@ -24,8 +24,12 @@ def get_all_animals():
             a.breed,
             a.status,
             a.customer_id,
-            a.location_id
+            a.location_id,
+            l.name location_name,
+            l.address location_address
         FROM animal a
+        JOIN Location l
+            ON l.id = a.location_id
         """)
 
         # Initialize an empty list to hold all animal representations
@@ -43,6 +47,13 @@ def get_all_animals():
             # Animal class above.
             animal = Animal(row['id'], row['name'], row['breed'], row['status'], row['customer_id'], row['location_id'])
 
+            # Create a Location instance from the current row
+            location = Location(row['location_name'], row['location_address'])
+
+            # Add the dictionary representation of the location to the animal
+            animal.location = location.__dict__
+
+            # Add the dictionary representation of the animal to the list
             animals.append(animal.__dict__)
 
     # Use `json` package to properly serialize list as JSON
