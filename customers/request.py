@@ -59,14 +59,29 @@ def get_single_customer(id):
         return json.dumps(customer.__dict__)
 
 
-def create_customer(customer):
-    last_customer = CUSTOMERS[-1]
-    new_id = last_customer.id + 1
-    customer["id"] = new_id
-    new_customer = Customer(customer['id'], customer['name'], customer['address'], customer['email'], customer['password'])
-    CUSTOMERS.append(new_customer)
+def create_customer(new_customer):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    return customer
+        db_cursor.execute("""
+        INSERT INTO Customer
+            ( name, address, email, password )
+        VALUES
+            ( ?, ?, ?, ? );
+        """, (new_customer['name'], new_customer['address'], new_customer['email'], new_customer['password'] ))
+
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
+
+        # Add the `id` property to the animal dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_customer['id'] = id
+
+
+    return json.dumps(new_customer)
 
 def delete_customer(id):
     with sqlite3.connect("./kennel.db") as conn:

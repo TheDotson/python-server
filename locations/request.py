@@ -55,17 +55,29 @@ def get_single_location(id):
         return json.dumps(location.__dict__)
 
 
-def create_location(location):
-    max_id = LOCATIONS[-1].id
+def create_location(new_location):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Location
+            ( name, address )
+        VALUES
+            ( ?, ? );
+        """, (new_location['name'], new_location['address'] ))
 
-    location["id"] = new_id
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
 
-    new_location = Location(location['id'], location['name'], location['address'])
-    LOCATIONS.append(new_location)
+        # Add the `id` property to the animal dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_location['id'] = id
 
-    return location
+
+    return json.dumps(new_location)
 
 def delete_location(id):
     with sqlite3.connect("./kennel.db") as conn:
